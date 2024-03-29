@@ -14,8 +14,12 @@ pub fn build(b: *std.Build) !void {
     });
 
     exe.linkLibC();
+
+    // TODO: figure out a better way to include raylilb as dep
     exe.addIncludePath(std.build.LazyPath.relative("vendor/raylib/zig-out/include"));
     exe.addLibraryPath(std.build.LazyPath.relative("vendor/raylib/zig-out/lib"));
+
+    // TODO: make this step OS specific
     exe.linkSystemLibrary("raylib");
     exe.linkFramework("CoreVideo");
     exe.linkFramework("IOKit");
