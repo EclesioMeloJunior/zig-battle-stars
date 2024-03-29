@@ -23,14 +23,14 @@ pub const Player = struct {
 
     pub fn init(comptime screen_width: comptime_int, comptime screen_height: comptime_int, allocator: Allocator) !Player {
         return Player{
-            .shoots = try std.ArrayList(Bullet).initCapacity(allocator, 8),
+            .shoots = try std.ArrayList(Bullet).initCapacity(allocator, 100),
             .origin = raylib.Vector2{ .x = 0, .y = 0 },
             .recharging = 0,
             .object = .{
                 .height = ACTOR_SIZE,
                 .width = ACTOR_SIZE,
                 .x = @as(f32, screen_width / 2 - ACTOR_SIZE / 2),
-                .y = @as(f32, screen_height / 2 - ACTOR_SIZE / 2),
+                .y = @as(f32, screen_height - ACTOR_SIZE),
             },
         };
     }
@@ -44,7 +44,7 @@ pub const Player = struct {
         var bullet = Bullet{ .object = .{
             .height = PROJECTILE_SIZE,
             .width = PROJECTILE_SIZE,
-            .x = self.object.x,
+            .x = (self.object.x + (self.object.width / 2) - (PROJECTILE_SIZE / 2)),
             .y = self.object.y - PROJECTILE_SIZE,
         }, .origin = .{
             .x = 0,
@@ -76,15 +76,20 @@ pub const GameState = struct {
 
     fn handle_keyboard_input(self: *GameState) !void {
         if (raylib.IsKeyDown(raylib.KEY_RIGHT)) {
-            self.*.player.object.x += 3.5;
+            const player_x_pos = self.player.object.x;
+            if (player_x_pos <= (self.canvas.x - self.player.object.width - 10)) {
+                self.player.object.x += 3.5;
+            }
         }
 
         if (raylib.IsKeyDown(raylib.KEY_LEFT)) {
-            self.*.player.object.x -= 3.5;
+            if (self.player.object.x >= 10) {
+                self.player.object.x -= 3.5;
+            }
         }
 
         if (raylib.IsKeyDown(raylib.KEY_SPACE) and self.player.recharging == 0) {
-            try self.*.player.shoot();
+            try self.player.shoot();
         }
     }
 
@@ -100,6 +105,7 @@ pub const GameState = struct {
             if (bullet_ptr.object.y <= 0) {
                 try indexes_to_remove.append(idx);
             } else {
+                std.debug.print("{d}\n", .{bullet_ptr.*.object.y});
                 bullet_ptr.*.object.y -= 1.0;
             }
         }
