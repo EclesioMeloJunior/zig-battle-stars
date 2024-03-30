@@ -9,6 +9,8 @@ const SCREEN_HEIGHT: c_int = 450;
 
 pub fn main() !void {
     const window_title: [*c]const u8 = "ziground";
+    raylib.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, window_title);
+    raylib.SetTargetFPS(60);
 
     var gpa = std.heap.GeneralPurposeAllocator(.{
         .verbose_log = true,
@@ -23,6 +25,8 @@ pub fn main() !void {
         if (deinit_status == .leak) @panic("MEMORY LEAK");
     }
 
+    std.debug.print("before player init\n", .{});
+
     var player = try game.Player.init(
         SCREEN_WIDTH,
         SCREEN_HEIGHT,
@@ -30,13 +34,12 @@ pub fn main() !void {
     );
     defer player.deinit();
 
+    std.debug.print("after player init\n", .{});
+
     var game_state = game.GameState{
         .canvas = .{ .x = SCREEN_WIDTH, .y = SCREEN_HEIGHT },
         .player = player,
     };
-
-    raylib.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, window_title);
-    raylib.SetTargetFPS(60);
 
     while (!raylib.WindowShouldClose()) {
         try game.GameState.update(&game_state);
