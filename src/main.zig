@@ -3,6 +3,7 @@ const raylib = @cImport({
     @cInclude("raylib.h");
 });
 const game = @import("game.zig");
+const bullet = @import("bullet.zig");
 
 const SCREEN_WIDTH: c_int = 800;
 const SCREEN_HEIGHT: c_int = 450;
@@ -25,16 +26,15 @@ pub fn main() !void {
         if (deinit_status == .leak) @panic("MEMORY LEAK");
     }
 
-    std.debug.print("before player init\n", .{});
+    var bullet_collection = bullet.BulletCollection.init();
 
     var player = try game.Player.init(
         SCREEN_WIDTH,
         SCREEN_HEIGHT,
+        bullet_collection,
         allocator,
     );
     defer player.deinit();
-
-    std.debug.print("after player init\n", .{});
 
     var game_state = game.GameState{
         .canvas = .{ .x = SCREEN_WIDTH, .y = SCREEN_HEIGHT },

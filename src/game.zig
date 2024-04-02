@@ -2,34 +2,32 @@ const std = @import("std");
 const raylib = @cImport({
     @cInclude("raylib.h");
 });
+const bullet = @import("bullet.zig");
 const mem = std.mem;
 const Allocator = mem.Allocator;
 
 const ACTOR_SIZE: c_int = 100;
-const PROJECTILE_SIZE: c_int = 10;
+const PROJECTILE_SIZE: c_int = 15;
 const CHARGING_DELAY: i32 = 30; // 2s (given 60FPS)
 
 fn cintToFloat32(value: c_int) f32 {
     return @as(f32, @floatFromInt(value));
 }
 
-pub const Bullet = struct {
-    origin: raylib.Vector2,
-    object: raylib.Rectangle,
-};
-
 pub const Player = struct {
+    bullet_collection: bullet.BulletCollection,
     spaceship: raylib.Texture2D,
     spaceship_source: raylib.Rectangle,
     spaceship_dest: raylib.Rectangle,
 
     recharging: i32,
-    shoots: std.ArrayList(Bullet),
+    shoots: std.ArrayList(bullet.Bullet),
 
-    pub fn init(comptime screen_width: comptime_int, comptime screen_height: comptime_int, allocator: Allocator) !Player {
+    pub fn init(comptime screen_width: comptime_int, comptime screen_height: comptime_int, bullet_collection: bullet.BulletCollection, allocator: Allocator) !Player {
         const texture = raylib.LoadTexture("./resources/spaceship_blue.PNG");
 
         return Player{
+            .bullet_collection = bullet_collection,
             .spaceship = texture,
             .spaceship_source = .{
                 .x = 0,
@@ -38,12 +36,12 @@ pub const Player = struct {
                 .height = cintToFloat32(texture.height),
             },
             .spaceship_dest = .{
-                .x = cintToFloat32(screen_width / 2 - ACTOR_SIZE / 2),
+                .x = cintToFloat32((screen_width / 2) - (ACTOR_SIZE / 2)),
                 .y = cintToFloat32(screen_height - ACTOR_SIZE),
                 .width = cintToFloat32(ACTOR_SIZE),
                 .height = cintToFloat32(ACTOR_SIZE),
             },
-            .shoots = try std.ArrayList(Bullet).initCapacity(allocator, 40),
+            .shoots = try std.ArrayList(bullet.Bullet).initCapacity(allocator, 40),
             .recharging = 0,
         };
     }
@@ -54,20 +52,17 @@ pub const Player = struct {
     }
 
     fn shoot(self: *Player) !void {
-        var bullet = Bullet{ .object = .{
+        var local_x: f32 = self.spaceship_dest.x + (ACTOR_SIZE / 2) - (PROJECTILE_SIZE / 2);
+        var local: raylib.Rectangle = .{
             .height = PROJECTILE_SIZE,
             .width = PROJECTILE_SIZE,
-            .x = (self.spaceship_dest.x + @as(
-                f32,
-                ACTOR_SIZE / 2,
-            ) - (PROJECTILE_SIZE / 2)),
-            .y = self.spaceship_dest.y - PROJECTILE_SIZE + 10,
-        }, .origin = .{
-            .x = 0,
-            .y = 0,
-        } };
+            .x = local_x,
+            .y = self.spaceship_dest.y - PROJECTILE_SIZE + 20,
+        };
 
-        try self.shoots.append(bullet);
+        var projectile = self.bullet_collection.simple_bullet(local);
+        try self.shoots.append(projectile);
+
         self.recharging = CHARGING_DELAY;
     }
 
@@ -117,11 +112,11 @@ pub const GameState = struct {
         var indexes_to_remove: std.ArrayList(usize) = std.ArrayList(usize).init(std.heap.page_allocator);
         defer indexes_to_remove.deinit();
 
-        for (self.player.shoots.items, 0..) |*bullet_ptr, idx| {
-            if (bullet_ptr.object.y <= 0) {
+        for (self.player.shoots.items, 0..) |*projectile, idx| {
+            if (projectile.dest.y <= 0) {
                 try indexes_to_remove.append(idx);
             } else {
-                bullet_ptr.*.object.y -= 1.0;
+                //projectile.*.dest.y -= 1.0;
             }
         }
 
@@ -131,6 +126,14 @@ pub const GameState = struct {
     }
 
     pub fn draw(self: *GameState) void {
+        var outer = self.player.spaceship_dest;
+        raylib.DrawRectanglePro(
+            outer,
+            .{ .x = 0, .y = 0 },
+            0,
+            raylib.RED,
+        );
+
         raylib.DrawTexturePro(
             self.player.spaceship,
             self.player.spaceship_source,
@@ -140,8 +143,22 @@ pub const GameState = struct {
             raylib.WHITE,
         );
 
-        for (self.player.shoots.items) |bullet_ptr| {
-            raylib.DrawRectanglePro(bullet_ptr.object, bullet_ptr.origin, 0, raylib.DARKPURPLE);
+        for (self.player.shoots.items) |projectile| {
+            raylib.DrawRectanglePro(
+                projectile.dest,
+                .{ .x = 0, .y = 0 },
+                0,
+                raylib.GREEN,
+            );
+
+            raylib.DrawTexturePro(
+                projectile.texture,
+                projectile.source,
+                projectile.dest,
+                projectile.origin,
+                0,
+                raylib.WHITE,
+            );
         }
     }
 };
