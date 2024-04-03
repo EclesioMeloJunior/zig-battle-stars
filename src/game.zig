@@ -3,6 +3,7 @@ const raylib = @cImport({
     @cInclude("raylib.h");
 });
 const bullet = @import("bullet.zig");
+const level = @import("level.zig");
 const mem = std.mem;
 const Allocator = mem.Allocator;
 
@@ -69,20 +70,43 @@ pub const Player = struct {
     fn destroy_bullet(self: *Player, remove_idx: usize) void {
         _ = self.shoots.orderedRemove(remove_idx);
     }
+
+    fn update_recharge(self: *Player) void {
+        // limit the amount of shoots per second
+        if (self.recharging > 0) {
+            self.recharging -= 1;
+        }
+    }
 };
 
 pub const GameState = struct {
     canvas: raylib.Vector2,
     player: Player,
+    current_level: level.Level,
+    allocator: Allocator,
 
     pub fn update(self: *GameState) !void {
-        // limit the amount of shoots per second
-        if (self.player.recharging > 0) {
-            self.player.recharging -= 1;
+        const should_change = self.should_change_level();
+        if (should_change) {
+            self.current_level.deinit();
+            try self.next_level();
         }
 
+        self.player.update_recharge();
         try self.update_bullet();
         try self.handle_keyboard_input();
+    }
+
+    fn should_change_level(self: *GameState) bool {
+        if (self.current_level.number == 0) {
+            return true;
+        }
+
+        return self.current_level.enemies.?.items.len > 1;
+    }
+
+    fn next_level(self: *GameState) !void {
+        self.current_level = try level.CreateNextLevel(self.current_level.number + 1, self.canvas, self.allocator);
     }
 
     fn handle_keyboard_input(self: *GameState) !void {
@@ -126,6 +150,17 @@ pub const GameState = struct {
     }
 
     pub fn draw(self: *GameState) void {
+        if (self.current_level.enemies) |enemies| {
+            for (enemies.items) |enemy| {
+                raylib.DrawRectanglePro(
+                    enemy.object,
+                    .{ .x = 0, .y = 0 },
+                    0,
+                    raylib.GREEN,
+                );
+            }
+        }
+
         // var outer = self.player.spaceship_dest;
         // raylib.DrawRectanglePro(
         //     outer,

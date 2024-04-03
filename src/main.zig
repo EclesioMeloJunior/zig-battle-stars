@@ -4,6 +4,7 @@ const raylib = @cImport({
 });
 const game = @import("game.zig");
 const bullet = @import("bullet.zig");
+const level = @import("level.zig");
 
 const SCREEN_WIDTH: c_int = 800;
 const SCREEN_HEIGHT: c_int = 450;
@@ -36,9 +37,13 @@ pub fn main() !void {
     );
     defer player.deinit();
 
+    const current_canvas = .{ .x = SCREEN_WIDTH, .y = SCREEN_HEIGHT };
+
     var game_state = game.GameState{
-        .canvas = .{ .x = SCREEN_WIDTH, .y = SCREEN_HEIGHT },
+        .allocator = allocator,
+        .canvas = current_canvas,
         .player = player,
+        .current_level = level.CreateEmptyLevel(),
     };
 
     while (!raylib.WindowShouldClose()) {
