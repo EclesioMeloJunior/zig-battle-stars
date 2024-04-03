@@ -116,7 +116,7 @@ pub const GameState = struct {
             if (projectile.dest.y <= 0) {
                 try indexes_to_remove.append(idx);
             } else {
-                //projectile.*.dest.y -= 1.0;
+                projectile.*.dest.y -= 1.0;
             }
         }
 
@@ -126,13 +126,13 @@ pub const GameState = struct {
     }
 
     pub fn draw(self: *GameState) void {
-        var outer = self.player.spaceship_dest;
-        raylib.DrawRectanglePro(
-            outer,
-            .{ .x = 0, .y = 0 },
-            0,
-            raylib.RED,
-        );
+        // var outer = self.player.spaceship_dest;
+        // raylib.DrawRectanglePro(
+        //     outer,
+        //     .{ .x = 0, .y = 0 },
+        //     0,
+        //     raylib.RED,
+        // );
 
         raylib.DrawTexturePro(
             self.player.spaceship,
@@ -144,12 +144,12 @@ pub const GameState = struct {
         );
 
         for (self.player.shoots.items) |projectile| {
-            raylib.DrawRectanglePro(
-                projectile.dest,
-                .{ .x = 0, .y = 0 },
-                0,
-                raylib.GREEN,
-            );
+            // raylib.DrawRectanglePro(
+            //     projectile.dest,
+            //     .{ .x = 0, .y = 0 },
+            //     0,
+            //     raylib.GREEN,
+            // );
 
             raylib.DrawTexturePro(
                 projectile.texture,
