@@ -9,7 +9,7 @@ const Allocator = mem.Allocator;
 
 const ACTOR_SIZE: c_int = 100;
 const PROJECTILE_SIZE: c_int = 15;
-const CHARGING_DELAY: i32 = 30; // 2s (given 60FPS)
+const CHARGING_DELAY: i32 = 10; // 2s (given 60FPS)
 
 fn cintToFloat32(value: c_int) f32 {
     return @as(f32, @floatFromInt(value));
@@ -24,7 +24,12 @@ pub const Player = struct {
     recharging: i32,
     shoots: std.ArrayList(bullet.Bullet),
 
-    pub fn init(comptime screen_width: comptime_int, comptime screen_height: comptime_int, bullet_collection: bullet.BulletCollection, allocator: Allocator) !Player {
+    pub fn init(
+        comptime screen_width: comptime_int,
+        comptime screen_height: comptime_int,
+        bullet_collection: bullet.BulletCollection,
+        allocator: Allocator,
+    ) !Player {
         const texture = raylib.LoadTexture("./resources/spaceship_blue.PNG");
 
         return Player{
@@ -119,11 +124,19 @@ pub const GameState = struct {
             return true;
         }
 
-        return self.current_level.enemies.?.items.len > 1;
+        if (self.current_level.enemies) |enemies| {
+            return enemies.items.len < 1;
+        }
+
+        return false;
     }
 
     fn next_level(self: *GameState) !void {
-        self.current_level = try level.CreateNextLevel(self.current_level.number + 1, self.canvas, self.allocator);
+        self.current_level = try level.CreateNextLevel(
+            self.current_level.number + 1,
+            self.canvas,
+            self.allocator,
+        );
     }
 
     fn handle_keyboard_input(self: *GameState) !void {
@@ -153,11 +166,21 @@ pub const GameState = struct {
         var indexes_to_remove: std.ArrayList(usize) = std.ArrayList(usize).init(std.heap.page_allocator);
         defer indexes_to_remove.deinit();
 
-        for (self.player.shoots.items, 0..) |*projectile, idx| {
-            if (projectile.dest.y <= 0) {
-                try indexes_to_remove.append(idx);
+        for (self.player.shoots.items, 0..) |*projectile, bullet_idx| {
+            if (self.current_level.enemies) |enemies| {
+                for (enemies.items, 0..) |enemy, enemy_idx| {
+                    if (projectile.collision_happened(enemy.object)) {
+                        std.debug.print("bullet {d} hit enemy {d}\n", .{ bullet_idx, enemy_idx });
+                        try indexes_to_remove.append(bullet_idx);
+                    }
+                }
+            }
+
+            const is_out = projectile.bullet_out_of_canvas(self.canvas);
+            if (is_out) {
+                try indexes_to_remove.append(bullet_idx);
             } else {
-                projectile.*.dest.y -= 1.0;
+                projectile.update_y(-1.0);
             }
         }
 

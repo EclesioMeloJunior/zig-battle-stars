@@ -8,6 +8,30 @@ pub const Bullet = struct {
     source: raylib.Rectangle,
     dest: raylib.Rectangle,
     origin: raylib.Vector2,
+
+    pub fn bullet_out_of_canvas(self: *Bullet, current_game_canvas: raylib.Vector2) bool {
+        const canvas_top_edge: f32 = 0.0;
+        const canvas_bottom_edge = current_game_canvas.y;
+
+        const canvas_left_edge: f32 = 0.0;
+        const canvas_rigth_edge = current_game_canvas.x;
+
+        return self.dest.y < canvas_top_edge or
+            self.dest.y > canvas_bottom_edge or
+            self.dest.x < canvas_left_edge or
+            self.dest.x > canvas_rigth_edge;
+    }
+
+    pub fn collision_happened(self: *Bullet, object: raylib.Rectangle) bool {
+        return object.x + object.width >= self.dest.x and
+            object.x <= self.dest.x + self.dest.width and
+            object.y + object.height >= self.dest.y and
+            object.y <= self.dest.y + self.dest.height;
+    }
+
+    pub fn update_y(self: *Bullet, value: f32) void {
+        self.dest.y += value;
+    }
 };
 
 pub const BulletCollection = struct {
