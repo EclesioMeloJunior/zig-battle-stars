@@ -28,7 +28,6 @@ pub fn main() !void {
     }
 
     var bullet_collection = bullet.BulletCollection.init();
-
     var player = try game.Player.init(
         SCREEN_WIDTH,
         SCREEN_HEIGHT,
@@ -38,13 +37,12 @@ pub fn main() !void {
     defer player.deinit();
 
     const current_canvas = .{ .x = SCREEN_WIDTH, .y = SCREEN_HEIGHT };
-
-    var game_state = game.GameState{
-        .allocator = allocator,
-        .canvas = current_canvas,
-        .player = player,
-        .current_level = level.CreateEmptyLevel(),
-    };
+    var game_state = game.GameState.init(
+        current_canvas,
+        player,
+        allocator,
+    );
+    defer game_state.deinit();
 
     while (!raylib.WindowShouldClose()) {
         try game.GameState.update(&game_state);

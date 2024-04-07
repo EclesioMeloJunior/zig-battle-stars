@@ -85,6 +85,23 @@ pub const GameState = struct {
     current_level: level.Level,
     allocator: Allocator,
 
+    pub fn init(
+        canvas: raylib.Vector2,
+        player: Player,
+        allocator: Allocator,
+    ) GameState {
+        return GameState{
+            .allocator = allocator,
+            .canvas = canvas,
+            .player = player,
+            .current_level = level.CreateEmptyLevel(),
+        };
+    }
+
+    pub fn deinit(self: *GameState) void {
+        self.current_level.deinit();
+    }
+
     pub fn update(self: *GameState) !void {
         const should_change = self.should_change_level();
         if (should_change) {
