@@ -10,7 +10,7 @@ const SCREEN_WIDTH: c_int = 800;
 const SCREEN_HEIGHT: c_int = 450;
 
 pub fn main() !void {
-    const window_title: [*c]const u8 = "ziground";
+    const window_title: [*c]const u8 = "zig-battle-stars";
     raylib.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, window_title);
     raylib.SetTargetFPS(60);
 
