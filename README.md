@@ -7,5 +7,10 @@ zig build run
 
 Current game development state:
 
-https://github.com/EclesioMeloJunior/zig-battle-stars/assets/17255488/b9194e04-34b6-4879-873b-46d0428bde7f
+- Player movement over X axis
+- Shoot going up and being deallocated when out of canvas or when collision happens
+- Collision detection
+- Random Walk enemy movement
+
+https://github.com/EclesioMeloJunior/zig-battle-stars/assets/17255488/fc055ae7-f520-461c-97a5-8a81c274f5f5
 
