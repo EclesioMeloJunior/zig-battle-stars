@@ -7,7 +7,7 @@ const level = @import("level.zig");
 const mem = std.mem;
 const Allocator = mem.Allocator;
 
-const ACTOR_SIZE: c_int = 100;
+pub const ACTOR_SIZE: c_int = 100;
 const PROJECTILE_SIZE: c_int = 15;
 const CHARGING_DELAY: i32 = 10; // 2s (given 60FPS)
 
@@ -114,6 +114,7 @@ pub const GameState = struct {
             try self.next_level();
         }
 
+        self.current_level.update();
         self.player.update_recharge();
         try self.update_bullet();
         try self.handle_keyboard_input();
@@ -141,14 +142,14 @@ pub const GameState = struct {
 
     fn handle_keyboard_input(self: *GameState) !void {
         if (raylib.IsKeyDown(raylib.KEY_RIGHT)) {
-            const player_x_pos = self.player.spaceship_dest.x;
-            if (player_x_pos <= (self.canvas.x - @as(f32, @floatFromInt(self.player.spaceship.width - 10)))) {
+            const player_x_pos = self.player.spaceship_dest.x + self.player.spaceship_dest.width;
+            if (player_x_pos <= self.canvas.x) {
                 self.player.spaceship_dest.x += 3.5;
             }
         }
 
         if (raylib.IsKeyDown(raylib.KEY_LEFT)) {
-            if (self.player.spaceship_dest.x >= 10) {
+            if (self.player.spaceship_dest.x >= 0) {
                 self.player.spaceship_dest.x -= 3.5;
             }
         }

@@ -2,16 +2,14 @@ const std = @import("std");
 const raylib = @cImport({
     @cInclude("raylib.h");
 });
+const screen = @import("screen.zig");
 const game = @import("game.zig");
 const bullet = @import("bullet.zig");
 const level = @import("level.zig");
 
-const SCREEN_WIDTH: c_int = 800;
-const SCREEN_HEIGHT: c_int = 450;
-
 pub fn main() !void {
     const window_title: [*c]const u8 = "zig-battle-stars";
-    raylib.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, window_title);
+    raylib.InitWindow(screen.SCREEN_WIDTH, screen.SCREEN_HEIGHT, window_title);
     raylib.SetTargetFPS(60);
 
     var gpa = std.heap.GeneralPurposeAllocator(.{
@@ -29,14 +27,14 @@ pub fn main() !void {
 
     var bullet_collection = bullet.BulletCollection.init();
     var player = try game.Player.init(
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT,
+        screen.SCREEN_WIDTH,
+        screen.SCREEN_HEIGHT,
         bullet_collection,
         allocator,
     );
     defer player.deinit();
 
-    const current_canvas = .{ .x = SCREEN_WIDTH, .y = SCREEN_HEIGHT };
+    const current_canvas = .{ .x = screen.SCREEN_WIDTH, .y = screen.SCREEN_HEIGHT };
     var game_state = game.GameState.init(
         current_canvas,
         player,
