@@ -11,7 +11,7 @@ pub const ACTOR_SIZE: c_int = 100;
 const PROJECTILE_SIZE: c_int = 15;
 const CHARGING_DELAY: i32 = 10; // 2s (given 60FPS)
 
-fn cintToFloat32(value: c_int) f32 {
+pub fn cintToFloat32(value: c_int) f32 {
     return @as(f32, @floatFromInt(value));
 }
 
@@ -193,11 +193,20 @@ pub const GameState = struct {
     pub fn draw(self: *GameState) void {
         if (self.current_level.enemies) |enemies| {
             for (enemies.items) |enemy| {
-                raylib.DrawRectanglePro(
+                // raylib.DrawRectanglePro(
+                //     enemy.object,
+                //     .{ .x = 0, .y = 0 },
+                //     0,
+                //     raylib.GREEN,
+                // );
+
+                raylib.DrawTexturePro(
+                    enemy.texture,
+                    enemy.texture_src,
                     enemy.object,
                     .{ .x = 0, .y = 0 },
-                    0,
-                    raylib.GREEN,
+                    180.0,
+                    raylib.WHITE,
                 );
             }
         }

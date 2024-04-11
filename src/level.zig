@@ -13,9 +13,33 @@ pub const ENEMY_WAIT_TIME: c_int = 0;
 pub const ENEMY_LEFT_X_LIMIT: f32 = game.ACTOR_SIZE / 2;
 pub const ENEMY_RIGHT_X_LIMIT: f32 = screen.SCREEN_WIDTH - (game.ACTOR_SIZE / 2);
 pub const ENEMY_Y_LIMIT: f32 = screen.SCREEN_HEIGHT * 2 / 3;
+
 pub const Enemy = struct {
+    texture: raylib.Texture2D,
+    texture_src: raylib.Rectangle,
     object: raylib.Rectangle,
     wait: c_int,
+
+    pub fn small_enemy(x_pos: f32, y_pos: f32) Enemy {
+        const small_enemy_texture = raylib.LoadTexture("./resources/small_enemy.png");
+
+        return Enemy{
+            .wait = ENEMY_WAIT_TIME,
+            .texture = small_enemy_texture,
+            .texture_src = .{
+                .x = 0,
+                .y = 0,
+                .width = game.cintToFloat32(small_enemy_texture.width),
+                .height = game.cintToFloat32(small_enemy_texture.height),
+            },
+            .object = .{
+                .x = x_pos,
+                .y = y_pos,
+                .width = @as(f32, ENEMY_SIZE),
+                .height = @as(f32, ENEMY_SIZE),
+            },
+        };
+    }
 
     pub fn random_walk(self: *Enemy) void {
         if (self.wait > 0) {
@@ -67,18 +91,8 @@ pub fn CreateEmptyLevel() Level {
 
 pub fn CreateNextLevel(number: usize, canvas: raylib.Vector2, allocator: Allocator) !Level {
     //const enemies_per_row = 4;
-    const enemy = Enemy{
-        .wait = ENEMY_WAIT_TIME,
-        .object = .{
-            .x = (canvas.x / 2) - (ENEMY_SIZE / 2),
-            .y = 50,
-            .width = @as(f32, ENEMY_SIZE),
-            .height = @as(f32, ENEMY_SIZE),
-        },
-    };
-
     var enemies = try std.ArrayList(Enemy).initCapacity(allocator, number);
-    try enemies.append(enemy);
+    try enemies.append(Enemy.small_enemy((canvas.x / 2) - (ENEMY_SIZE / 2), 50));
 
     return Level{
         .number = number,
