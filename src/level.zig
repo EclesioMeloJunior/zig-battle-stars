@@ -6,6 +6,7 @@ const raylib = @cImport({
 });
 const game = @import("game.zig");
 const screen = @import("screen.zig");
+const bullet = @import("bullet.zig");
 const Allocator = std.mem.Allocator;
 
 pub const ENEMY_SIZE: c_int = 25;
@@ -18,7 +19,10 @@ pub const Enemy = struct {
     texture: raylib.Texture2D,
     texture_src: raylib.Rectangle,
     object: raylib.Rectangle,
+    origin: raylib.Vector2,
+    rotation: f32,
     wait: c_int,
+    life: i32,
 
     pub fn small_enemy(x_pos: f32, y_pos: f32) Enemy {
         const small_enemy_texture = raylib.LoadTexture("./resources/small_enemy.png");
@@ -38,7 +42,23 @@ pub const Enemy = struct {
                 .width = @as(f32, ENEMY_SIZE),
                 .height = @as(f32, ENEMY_SIZE),
             },
+            .origin = .{
+                .x = ENEMY_SIZE,
+                .y = ENEMY_SIZE,
+            },
+            .rotation = 180.0,
+            .life = 100,
         };
+    }
+
+    // take_damage updates the enemy life and returns true
+    // if enemy should disapear
+    pub fn take_damage(self: *Enemy, damage: i32) bool {
+        if (self.life - damage <= 0) {
+            return true;
+        }
+        self.life -= damage;
+        return false;
     }
 
     pub fn random_walk(self: *Enemy) void {
@@ -80,6 +100,22 @@ pub const Level = struct {
             }
         }
     }
+
+    pub fn check_collision(self: *Level, projectile: *bullet.Bullet) bool {
+        if (self.enemies) |enemies| {
+            for (enemies.items, 0..) |*enemy, enemy_idx| {
+                if (screen.collision_happened(enemy.object, projectile.dest)) {
+                    const should_disapear = enemy.take_damage(10);
+                    if (should_disapear) {
+                        _ = self.enemies.?.orderedRemove(enemy_idx);
+                    }
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 };
 
 pub fn CreateEmptyLevel() Level {
@@ -92,7 +128,12 @@ pub fn CreateEmptyLevel() Level {
 pub fn CreateNextLevel(number: usize, canvas: raylib.Vector2, allocator: Allocator) !Level {
     //const enemies_per_row = 4;
     var enemies = try std.ArrayList(Enemy).initCapacity(allocator, number);
-    try enemies.append(Enemy.small_enemy((canvas.x / 2) - (ENEMY_SIZE / 2), 50));
+
+    var idx: usize = 1;
+    while (idx <= number) : (idx += 1) {
+        std.debug.print("created!\n", .{});
+        try enemies.append(Enemy.small_enemy((canvas.x / 2) - (ENEMY_SIZE / 2), 50));
+    }
 
     return Level{
         .number = number,

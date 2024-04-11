@@ -22,13 +22,6 @@ pub const Bullet = struct {
             self.dest.x > canvas_rigth_edge;
     }
 
-    pub fn collision_happened(self: *Bullet, object: raylib.Rectangle) bool {
-        return object.x + object.width >= self.dest.x and
-            object.x <= self.dest.x + self.dest.width and
-            object.y + object.height >= self.dest.y and
-            object.y <= self.dest.y + self.dest.height;
-    }
-
     pub fn update_y(self: *Bullet, value: f32) void {
         self.dest.y += value;
     }

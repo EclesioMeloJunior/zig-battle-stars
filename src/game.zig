@@ -168,13 +168,9 @@ pub const GameState = struct {
         defer indexes_to_remove.deinit();
 
         for (self.player.shoots.items, 0..) |*projectile, bullet_idx| {
-            if (self.current_level.enemies) |enemies| {
-                for (enemies.items, 0..) |enemy, enemy_idx| {
-                    if (projectile.collision_happened(enemy.object)) {
-                        std.debug.print("bullet {d} hit enemy {d}\n", .{ bullet_idx, enemy_idx });
-                        try indexes_to_remove.append(bullet_idx);
-                    }
-                }
+            const collision = self.current_level.check_collision(projectile);
+            if (collision) {
+                try indexes_to_remove.append(bullet_idx);
             }
 
             const is_out = projectile.bullet_out_of_canvas(self.canvas);
@@ -204,8 +200,8 @@ pub const GameState = struct {
                     enemy.texture,
                     enemy.texture_src,
                     enemy.object,
-                    .{ .x = 0, .y = 0 },
-                    180.0,
+                    enemy.origin,
+                    enemy.rotation,
                     raylib.WHITE,
                 );
             }
